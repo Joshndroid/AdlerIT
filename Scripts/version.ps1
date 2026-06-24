@@ -58,9 +58,9 @@ function Invoke-AdlerItOptionalSigning {
     }
 }
 
-# Offline-safety verification, ported from TypeText's offline-portable checks.
-# AdlerIt is fully offline by design (no update checks, URL opening, networking,
-# or startup-registry writes). This asserts that remains true by:
+# Offline-safety verification. AdlerIt is fully offline by design (no update
+# checks, URL opening, networking, or startup-registry writes). This asserts
+# that remains true by:
 #   1. checking the dependency graph contains no networking/registry crates, and
 #   2. scanning the built binary for capability markers it must never contain.
 # Any match fails the build, catching a regression before release.

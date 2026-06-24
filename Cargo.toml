@@ -3,7 +3,7 @@ name = "adlerit"
 version = "0.1.0"
 edition = "2021"
 description = "A focused Adler-32 calculator for desktop and command line"
-license = "MIT"
+license = "AGPL-3.0-only"
 
 [dependencies]
 adler2 = "2.0"

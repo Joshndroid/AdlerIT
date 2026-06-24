@@ -94,11 +94,11 @@ AdlerIt has a deliberately small surface area:
 - It only reads the input you provide — inline text, a named file, or standard
   input — and writes the checksum to standard output or the desktop window.
 - It persists no state, so there is no settings or data file to tamper with.
-- An offline-capability guard runs during the Windows build (ported from
-  TypeText): it asserts the dependency graph contains no networking or registry
-  crates and scans the binary for capability markers (URL opening, web requests,
-  startup-registry writes, GitHub API). The build fails if any appear. A matching
-  audit runs in CI on every pull request.
+- An offline-capability guard runs during the Windows build: it asserts the
+  dependency graph contains no networking or registry crates and scans the binary
+  for capability markers (URL opening, web requests, startup-registry writes,
+  GitHub API). The build fails if any appear. A matching audit runs in CI on every
+  pull request.
 - The dependency tree is audited against the RustSec advisory database in CI and
   release, with a scheduled weekly re-audit.
 - Release binaries are scanned with Microsoft Defender and carry GitHub
@@ -245,4 +245,5 @@ The font is licensed under the SIL Open Font License 1.1; see
 
 ## License
 
-AdlerIt is released under the MIT License; see `LICENSE`.
+AdlerIt is released under the GNU Affero General Public License v3.0; see
+`LICENSE`.
