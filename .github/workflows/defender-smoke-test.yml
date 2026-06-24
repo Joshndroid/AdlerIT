@@ -51,6 +51,10 @@ jobs:
         shell: pwsh
         run: Scripts\build-windows-portable.ps1
 
+      - name: Build GUI-only app
+        shell: pwsh
+        run: Scripts\build-windows-gui.ps1
+
       - name: Build installer
         shell: pwsh
         run: Scripts\build-windows-installer.ps1
@@ -63,6 +67,7 @@ jobs:
 
           $artifacts = @(
             "dist\AdlerIt-Windows-x64.exe",
+            "dist\AdlerIt-Windows-x64-GUI.exe",
             "dist\AdlerIt-Windows-x64-Setup.exe"
           )
 
@@ -97,6 +102,7 @@ jobs:
 
           $releaseArtifacts = @(
             "dist\AdlerIt-Windows-x64.exe",
+            "dist\AdlerIt-Windows-x64-GUI.exe",
             "dist\AdlerIt-Windows-x64-Setup.exe"
           )
           Get-FileHash -Algorithm SHA256 -Path $releaseArtifacts |
@@ -111,6 +117,7 @@ jobs:
           name: AdlerIt-Windows-Defender-dry-run
           path: |
             dist/AdlerIt-Windows-x64.exe
+            dist/AdlerIt-Windows-x64-GUI.exe
             dist/AdlerIt-Windows-x64-Setup.exe
             dist/defender-scan-report.txt
           if-no-files-found: error

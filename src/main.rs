@@ -1,7 +1,3 @@
-mod app;
-mod hash;
-mod theme;
-
 use std::{
     io::{self, Read},
     process::ExitCode,
@@ -53,20 +49,7 @@ fn run() -> Result<()> {
         return run_cli(args);
     }
 
-    let options = eframe::NativeOptions {
-        viewport: eframe::egui::ViewportBuilder::default()
-            .with_title("AdlerIt")
-            .with_inner_size([760.0, 520.0])
-            .with_min_inner_size([560.0, 400.0]),
-        ..Default::default()
-    };
-
-    eframe::run_native(
-        "AdlerIt",
-        options,
-        Box::new(|cc| Ok(Box::new(app::AdlerApp::new(cc)))),
-    )
-    .map_err(|error| anyhow::anyhow!(error.to_string()))
+    adlerit::run_gui()
 }
 
 fn run_cli(args: Args) -> Result<()> {
@@ -84,11 +67,11 @@ fn run_cli(args: Args) -> Result<()> {
         bail!("no input provided")
     };
 
-    let result = hash::adler32(&bytes);
+    let result = adlerit::hash::adler32(&bytes);
     match args.format {
-        OutputFormat::Hex => println!("{}", hash::hex(result)),
+        OutputFormat::Hex => println!("{}", adlerit::hash::hex(result)),
         OutputFormat::Decimal => println!("{result}"),
-        OutputFormat::Both => println!("{}  {result}", hash::hex(result)),
+        OutputFormat::Both => println!("{}  {result}", adlerit::hash::hex(result)),
     }
     Ok(())
 }

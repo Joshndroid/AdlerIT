@@ -117,6 +117,7 @@ Release artifacts (each a single file):
 
 ```text
 AdlerIt-Windows-x64.exe          portable
+AdlerIt-Windows-x64-GUI.exe      portable, GUI only
 AdlerIt-Windows-x64-Setup.exe    installer
 ```
 
@@ -124,6 +125,8 @@ Choose the package that matches the environment:
 
 - `AdlerIt-Windows-x64.exe` is the portable build — a single self-contained
   executable; download and run it, no installation required.
+- `AdlerIt-Windows-x64-GUI.exe` is the portable desktop-only build. It has no
+  command-line interface and opens without a console window.
 - `AdlerIt-Windows-x64-Setup.exe` installs AdlerIt and can add it to PATH.
 
 Both are native 64-bit Windows applications with no bundled browser engine or web
@@ -139,8 +142,8 @@ git push origin v0.1.0
 Before creating the tag, run **Build release apps** manually from the GitHub
 Actions page and enter the intended `vX.X.X` tag. This dry run uses the real
 release jobs to check formatting, tests, Clippy, the dependency audit, the
-offline-capability guard, the portable and installer packages, and the Microsoft
-Defender scan. It verifies the final artifact set and previews the release notes,
+offline-capability guard, all three Windows packages, and the Microsoft Defender
+scan. It verifies the final artifact set and previews the release notes,
 but it does not create a tag, provenance attestations, or a GitHub Release.
 
 The `version` in `Cargo.toml` is the single source of truth for the AdlerIt
@@ -170,7 +173,7 @@ Release:
 - The offline-capability guard confirms the build pulls in no networking or
   registry crates and that the binary contains no network, URL-opening, or
   startup-registry capability markers.
-- Microsoft Defender scans the portable executable and the installer using
+- Microsoft Defender scans both portable executables and the installer using
   current signatures. Any detection, unavailable Defender service, or incomplete
   scan blocks release publication.
 - GitHub generates provenance attestations for the exact artifacts that passed
@@ -199,6 +202,12 @@ Build the portable app (a single AdlerIt-Windows-x64.exe):
 Scripts\build-windows-portable.ps1
 ```
 
+Build the GUI-only portable app (AdlerIt-Windows-x64-GUI.exe):
+
+```powershell
+Scripts\build-windows-gui.ps1
+```
+
 The Windows build targets 64-bit Windows:
 
 ```text
@@ -218,7 +227,7 @@ Scripts\build-windows-installer.ps1
 ```
 
 The installer script requires Inno Setup 6. On GitHub Actions this is installed
-with Chocolatey before the script runs. Both build scripts run the
+with Chocolatey before the script runs. All build scripts run the
 offline-capability guard before packaging.
 
 Outputs:
@@ -226,6 +235,8 @@ Outputs:
 ```text
 dist\AdlerIt-Windows-x64.exe
 dist\AdlerIt-Windows-x64.exe.sha256
+dist\AdlerIt-Windows-x64-GUI.exe
+dist\AdlerIt-Windows-x64-GUI.exe.sha256
 dist\AdlerIt-Windows-x64-Setup.exe
 dist\AdlerIt-Windows-x64-Setup.exe.sha256
 ```
