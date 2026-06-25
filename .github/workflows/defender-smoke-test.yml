@@ -53,7 +53,7 @@ jobs:
           $scanRoot = Join-Path $PWD "defender-scan"
           New-Item -ItemType Directory -Path $scanRoot -Force | Out-Null
 
-          $artifact = "dist\AdlerIt-Windows-x64.exe"
+          $artifact = "dist\AdlerIT-Windows-x64.exe"
           if (-not (Test-Path $artifact)) { throw "Expected release artifact was not built: $artifact" }
           Copy-Item $artifact $scanRoot
 
@@ -81,7 +81,7 @@ jobs:
             "SHA-256 release artifact hash:"
           ) | Set-Content -Path $reportPath -Encoding UTF8
 
-          Get-FileHash -Algorithm SHA256 -Path "dist\AdlerIt-Windows-x64.exe" |
+          Get-FileHash -Algorithm SHA256 -Path "dist\AdlerIT-Windows-x64.exe" |
             ForEach-Object { "$($_.Hash)  $([IO.Path]::GetFileName($_.Path))" } |
             Add-Content -Path $reportPath -Encoding UTF8
 
@@ -90,8 +90,8 @@ jobs:
       - name: Upload scanned dry-run artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: AdlerIt-Windows-Defender-dry-run
+          name: AdlerIT-Windows-Defender-dry-run
           path: |
-            dist/AdlerIt-Windows-x64.exe
+            dist/AdlerIT-Windows-x64.exe
             dist/defender-scan-report.txt
           if-no-files-found: error

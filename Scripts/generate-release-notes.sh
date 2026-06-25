@@ -6,7 +6,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT_PATH="${1:-release-notes.md}"
 CURRENT_TAG="${2:-${GITHUB_REF_NAME:-}}"
-GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-joshndroid/AdlerIt}"
+GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-joshndroid/AdlerIT}"
 
 if [[ -z "$CURRENT_TAG" ]]; then
   CURRENT_TAG="$(git -C "$ROOT_DIR" describe --tags --exact-match 2>/dev/null || true)"

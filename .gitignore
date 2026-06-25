@@ -9,6 +9,9 @@
 # Editors / IDEs
 .idea/
 .vscode/
+!.vscode/
+!.vscode/extensions.json
+!.vscode/tasks.json
 *.swp
 *~
 

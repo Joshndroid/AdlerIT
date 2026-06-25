@@ -1,19 +1,22 @@
-mod app;
 pub mod hash;
 
-/// Launch the native AdlerIt desktop window.
-pub fn run_gui() -> Result<(), eframe::Error> {
-    let options = eframe::NativeOptions {
-        viewport: eframe::egui::ViewportBuilder::default()
-            .with_title("AdlerIt")
-            .with_inner_size([520.0, 360.0])
-            .with_min_inner_size([420.0, 320.0]),
-        ..Default::default()
-    };
+/// Launch the native AdlerIT desktop window.
+pub fn run_gui() -> Result<(), String> {
+    platform::run_gui()
+}
 
-    eframe::run_native(
-        "AdlerIt",
-        options,
-        Box::new(|cc| Ok(Box::new(app::AdlerApp::new(cc)))),
-    )
+#[cfg(target_os = "windows")]
+mod platform {
+    mod win32_app;
+
+    pub fn run_gui() -> Result<(), String> {
+        win32_app::run()
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+mod platform {
+    pub fn run_gui() -> Result<(), String> {
+        Err("AdlerIT is a native Windows desktop app. Build it on Windows to run the GUI.".into())
+    }
 }

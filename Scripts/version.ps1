@@ -1,6 +1,6 @@
-# Shared version, checksum, and optional-signing helpers for AdlerIt Windows tooling.
+# Shared version, checksum, and optional-signing helpers for AdlerIT Windows tooling.
 
-function Get-AdlerItVersion {
+function Get-AdlerITVersion {
     param([string]$RootDir)
     $cargo = Join-Path $RootDir "Cargo.toml"
     foreach ($line in Get-Content $cargo) {
@@ -11,7 +11,7 @@ function Get-AdlerItVersion {
     throw "Could not read version from $cargo"
 }
 
-function Write-AdlerItChecksum {
+function Write-AdlerITChecksum {
     param([string]$Path)
     $hash = (Get-FileHash -Algorithm SHA256 -Path $Path).Hash.ToLower()
     $name = [IO.Path]::GetFileName($Path)
@@ -23,7 +23,7 @@ function Write-AdlerItChecksum {
 # Optionally Authenticode-sign a Windows binary when a code-signing certificate
 # is configured via secrets. No-op (with a notice) when none is present, so the
 # build still succeeds for unsigned/dev builds.
-function Invoke-AdlerItOptionalSigning {
+function Invoke-AdlerITOptionalSigning {
     param([string]$Path)
 
     $pfxBase64 = $env:WINDOWS_CERTIFICATE_PFX_BASE64
@@ -58,13 +58,13 @@ function Invoke-AdlerItOptionalSigning {
     }
 }
 
-# Offline-safety verification. AdlerIt is fully offline by design (no update
+# Offline-safety verification. AdlerIT is fully offline by design (no update
 # checks, URL opening, networking, or startup-registry writes). This asserts
 # that remains true by:
 #   1. checking the dependency graph contains no networking/registry crates, and
 #   2. scanning the built binary for capability markers it must never contain.
 # Any match fails the build, catching a regression before release.
-function Assert-AdlerItOfflineSafety {
+function Assert-AdlerITOfflineSafety {
     param(
         [string]$ExePath,
         [string]$Target = "x86_64-pc-windows-msvc",

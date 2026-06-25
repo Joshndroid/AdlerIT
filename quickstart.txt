@@ -1,20 +1,20 @@
-AdlerIt Quick Start
+AdlerIT Quick Start
 ===================
 
-AdlerIt computes Adler-32 checksums in a small native Windows desktop app.
-Download AdlerIt-Windows-x64.exe and run it. There is no installer and no
+AdlerIT computes Adler-32 checksums in a small native Windows desktop app.
+Download AdlerIT-Windows-x64.exe and run it. There is no installer and no
 command-line interface.
 
-AdlerIt makes no network connections and writes no settings, history, cache, or
+AdlerIT makes no network connections and writes no settings, history, cache, or
 data files.
 
 
 1. First Run
 ------------
 
-- Download AdlerIt-Windows-x64.exe.
+- Download AdlerIT-Windows-x64.exe.
 - Run the executable.
-- The AdlerIt window opens directly, without a terminal window.
+- The AdlerIT window opens directly, without a terminal window.
 - No installation or PATH setup is required.
 
 
@@ -30,7 +30,7 @@ data files.
 3. Appearance
 -------------
 
-AdlerIt follows your Windows light/dark theme and uses a fixed blue accent.
+AdlerIT follows your Windows light/dark theme and uses a fixed blue accent.
 
 
 4. Verifying Your Download
@@ -39,13 +39,13 @@ AdlerIt follows your Windows light/dark theme and uses a fixed blue accent.
 GitHub shows a SHA-256 digest next to each release asset. Compute the hash of
 your download and compare it to that digest:
 
-  Get-FileHash .\AdlerIt-Windows-x64.exe -Algorithm SHA256
+  Get-FileHash .\AdlerIT-Windows-x64.exe -Algorithm SHA256
 
 Release binaries also carry a GitHub build-provenance attestation, and are
 scanned with Microsoft Defender before publication. To verify provenance with
 the GitHub CLI:
 
-  gh attestation verify AdlerIt-Windows-x64.exe --repo Joshndroid/AdlerIt
+  gh attestation verify AdlerIT-Windows-x64.exe --repo Joshndroid/AdlerIT
 
 Note: Adler-32 is a checksum for integrity and error detection, not a
 cryptographic hash. Do not rely on it to prove authenticity against a malicious
@@ -56,8 +56,8 @@ party.
 ------------------
 
 The window does not open:
-- Make sure you downloaded AdlerIt-Windows-x64.exe for 64-bit Windows.
+- Make sure you downloaded AdlerIT-Windows-x64.exe for 64-bit Windows.
 
 Different result than expected:
-- AdlerIt hashes UTF-8 text exactly as entered, so whitespace and trailing
+- AdlerIT hashes UTF-8 text exactly as entered, so whitespace and trailing
   newlines change the checksum.

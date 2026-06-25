@@ -1,18 +1,18 @@
-# AdlerIt
+# AdlerIT
 
-AdlerIt is a small native Windows GUI for computing Adler-32 checksums. It is a
+AdlerIT is a small native Windows GUI for computing Adler-32 checksums. It is a
 single desktop executable: open it, type or paste text, and copy the checksum.
 
 The app is intentionally quiet. It performs no network access, writes no
-settings or history, and uses native rendering through `egui` rather than a
-browser engine or web runtime.
+settings or history, and uses direct Win32 controls rather than a browser
+engine, web runtime, or GPU-rendered cross-platform UI toolkit.
 
 ## Features
 
 - Live Adler-32 calculation from text typed into the desktop window
 - Hex and decimal output with a UTF-8 byte count
 - One-click copy of the hex checksum
-- Follows the Windows light/dark theme with a fixed blue accent
+- Standard Windows controls with a fixed blue accent
 - Bundled JetBrains Mono for checksum/input text
 - No network access, telemetry, update checks, persisted state, or background
   activity
@@ -20,7 +20,7 @@ browser engine or web runtime.
 ## Implementation
 
 - Single-crate Rust GUI app (`adlerit`)
-- `egui/eframe` desktop UI in `src/app.rs`
+- Native Win32 desktop UI in `src/platform/win32_app.rs`
 - Small in-tree Adler-32 implementation in `src/hash.rs`
 - JetBrains Mono embedded directly in the executable
 
@@ -29,8 +29,9 @@ browser engine or web runtime.
 ```text
 src/
   main.rs               GUI entry point
-  app.rs                desktop UI
   hash.rs               Adler-32 calculation
+  platform/
+    win32_app.rs        native Windows desktop UI
 
 assets/
   fonts/
@@ -47,12 +48,12 @@ quickstart.txt          user-facing usage handout
 
 ## App Data
 
-AdlerIt stores nothing. It writes no settings, history, cache, or data files.
+AdlerIT stores nothing. It writes no settings, history, cache, or data files.
 There is nothing to back up, clear, or migrate between versions.
 
 ## Security Notes
 
-AdlerIt has a deliberately small surface area:
+AdlerIT has a deliberately small surface area:
 
 - It performs no network access at all: no update checks, telemetry, or outbound
   connections.
@@ -70,10 +71,10 @@ party or to store or compare secrets.
 
 ## Build And Run
 
-AdlerIt targets Windows. Release builds produce one portable executable:
+AdlerIT targets Windows. Release builds produce one portable executable:
 
 ```text
-AdlerIt-Windows-x64.exe
+AdlerIT-Windows-x64.exe
 ```
 
 Run locally during development:
@@ -104,13 +105,13 @@ rustup target add x86_64-pc-windows-msvc
 The build output is:
 
 ```text
-dist\AdlerIt-Windows-x64.exe
-dist\AdlerIt-Windows-x64.exe.sha256
+dist\AdlerIT-Windows-x64.exe
+dist\AdlerIT-Windows-x64.exe.sha256
 ```
 
 ## Releases
 
-The `version` in `Cargo.toml` is the single source of truth for the AdlerIt
+The `version` in `Cargo.toml` is the single source of truth for the AdlerIT
 release version. Update it, let Cargo refresh `Cargo.lock`, commit both files,
 then create a matching `vX.X.X` tag.
 
@@ -129,20 +130,21 @@ the Microsoft Defender scan.
 Verify a downloaded release artifact with the GitHub CLI:
 
 ```bash
-gh attestation verify AdlerIt-Windows-x64.exe --repo Joshndroid/AdlerIt
+gh attestation verify AdlerIT-Windows-x64.exe --repo Joshndroid/AdlerIT
 ```
 
 ## Appearance
 
-The desktop app follows the operating system's light/dark theme and uses a fixed
-blue accent.
+The desktop app uses standard Windows controls, the default Windows GUI font for
+labels and buttons, JetBrains Mono for text/checksum fields, and a fixed blue
+accent.
 
 ## Bundled Fonts
 
-AdlerIt bundles JetBrains Mono Regular for checksum and input text. The font is
+AdlerIT bundles JetBrains Mono Regular for checksum and input text. The font is
 licensed under the SIL Open Font License 1.1; see `assets/fonts/OFL.txt`.
 
 ## License
 
-AdlerIt is released under the GNU Affero General Public License v3.0; see
+AdlerIT is released under the GNU Affero General Public License v3.0; see
 `LICENSE`.
