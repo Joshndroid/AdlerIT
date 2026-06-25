@@ -25,6 +25,7 @@ dependencies = [
  "anyhow",
  "clap",
  "eframe",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

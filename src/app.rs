@@ -29,7 +29,7 @@ impl eframe::App for AdlerApp {
         let ctx = ui.ctx().clone();
         let old_theme = self.theme_mode;
 
-        ui.add_space(8.0);
+        ui.add_space(4.0);
         ui.horizontal(|ui| {
             ui.heading(RichText::new("AdlerIt").strong());
             ui.label(RichText::new("Adler-32 calculator").weak());
@@ -46,21 +46,21 @@ impl eframe::App for AdlerApp {
         ui.add_space(8.0);
         ui.separator();
 
-        ui.add_space(18.0);
+        ui.add_space(14.0);
         ui.label(RichText::new("INPUT").small().strong());
         ui.add_space(6.0);
         let response = ui.add_sized(
-            [ui.available_width(), 220.0],
+            [ui.available_width(), 140.0],
             TextEdit::multiline(&mut self.input)
-                .hint_text("Type or paste text / a number string…")
+                .hint_text("Type or paste text / a number string...")
                 .font(FontId::monospace(16.0))
-                .desired_rows(9),
+                .desired_rows(6),
         );
         if response.changed() {
             self.copy_label = "Copy";
         }
 
-        ui.add_space(20.0);
+        ui.add_space(16.0);
         ui.label(RichText::new("ADLER-32").small().strong());
         ui.add_space(6.0);
         let value = hash::adler32(self.input.as_bytes());
@@ -105,12 +105,10 @@ fn install_fonts(ctx: &egui::Context) {
         "JetBrains Mono".to_owned(),
         FontData::from_static(include_bytes!("../assets/fonts/JetBrainsMono-Regular.ttf")).into(),
     );
-    for family in [FontFamily::Proportional, FontFamily::Monospace] {
-        fonts
-            .families
-            .entry(family)
-            .or_default()
-            .insert(0, "JetBrains Mono".to_owned());
-    }
+    fonts
+        .families
+        .entry(FontFamily::Monospace)
+        .or_default()
+        .insert(0, "JetBrains Mono".to_owned());
     ctx.set_fonts(fonts);
 }

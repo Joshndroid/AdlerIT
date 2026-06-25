@@ -1,3 +1,5 @@
+#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
+
 use std::{
     io::{self, Read},
     process::ExitCode,
@@ -44,6 +46,10 @@ fn main() -> ExitCode {
 }
 
 fn run() -> Result<()> {
+    if std::env::args_os().len() > 1 {
+        console::attach_parent();
+    }
+
     let args = Args::parse();
     if args.text.is_some() || args.file.is_some() || args.stdin {
         return run_cli(args);
@@ -74,4 +80,20 @@ fn run_cli(args: Args) -> Result<()> {
         OutputFormat::Both => println!("{}  {result}", adlerit::hash::hex(result)),
     }
     Ok(())
+}
+
+#[cfg(target_os = "windows")]
+mod console {
+    pub fn attach_parent() {
+        unsafe {
+            windows_sys::Win32::System::Console::AttachConsole(
+                windows_sys::Win32::System::Console::ATTACH_PARENT_PROCESS,
+            );
+        }
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+mod console {
+    pub fn attach_parent() {}
 }
