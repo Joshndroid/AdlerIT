@@ -91,7 +91,9 @@ struct UiHandles {
     title_font: HFONT,
     theme: Theme,
     hex: String,
-    tooltip_text_storage: Vec<Vec<u16>>,
+    // Tooltip controls keep raw pointers to these strings, so the buffers must
+    // stay owned for as long as the tooltip window exists.
+    _tooltip_text_storage: Vec<Vec<u16>>,
     is_topmost: bool,
 }
 
@@ -631,7 +633,7 @@ unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) -> Result<(), String
             title_font,
             theme,
             hex: String::new(),
-            tooltip_text_storage,
+            _tooltip_text_storage: tooltip_text_storage,
             is_topmost: false,
         };
     });
@@ -645,13 +647,13 @@ unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) -> Result<(), String
 
 fn validate_gdi_resources(resources: &UiResources) -> Result<(), String> {
     let required = [
-        (resources.bg_brush as *mut c_void, "background brush"),
-        (resources.field_brush as *mut c_void, "field brush"),
-        (resources.label_font as *mut c_void, "label font"),
-        (resources.icon_font as *mut c_void, "icon font"),
-        (resources.input_font as *mut c_void, "input font"),
-        (resources.output_font as *mut c_void, "output font"),
-        (resources.title_font as *mut c_void, "title font"),
+        (resources.bg_brush, "background brush"),
+        (resources.field_brush, "field brush"),
+        (resources.label_font, "label font"),
+        (resources.icon_font, "icon font"),
+        (resources.input_font, "input font"),
+        (resources.output_font, "output font"),
+        (resources.title_font, "title font"),
     ];
 
     for (handle, name) in required {
