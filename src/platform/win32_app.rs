@@ -242,6 +242,9 @@ unsafe extern "system" fn window_proc(
             }
             if id == COPY_ID {
                 let hex = UI.with(|ui| ui.borrow().hex.clone());
+                if hex.is_empty() {
+                    return 0;
+                }
                 let copy = UI.with(|ui| ui.borrow().copy);
                 let copied = copy_to_clipboard(hwnd, &hex);
                 if copied {
