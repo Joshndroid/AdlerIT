@@ -10,12 +10,12 @@ fn main() {
         return;
     }
     if env::consts::OS != "windows" {
-        println!("cargo:warning=not running on Windows; skipping Windows icon resource embedding");
+        println!("cargo:warning=not running on Windows; skipping Windows resource embedding");
         return;
     }
 
     let Some(rc) = find_resource_compiler() else {
-        println!("cargo:warning=rc.exe was not found; skipping Windows icon resource embedding");
+        println!("cargo:warning=rc.exe was not found; skipping Windows resource embedding");
         return;
     };
 
@@ -23,16 +23,40 @@ fn main() {
         PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
     let out_dir = PathBuf::from(env::var_os("OUT_DIR").expect("OUT_DIR"));
     let icon_path = manifest_dir.join("assets").join("Icon").join("AdlerIT.ico");
+    let app_manifest_path = out_dir.join("adlerit.exe.manifest");
     let rc_path = out_dir.join("adlerit.rc");
     let res_path = out_dir.join("adlerit.res");
 
     let icon_path = icon_path.to_string_lossy().replace('\\', "\\\\");
+    let app_manifest_rc_path = app_manifest_path.to_string_lossy().replace('\\', "\\\\");
     let version = env::var("CARGO_PKG_VERSION").expect("CARGO_PKG_VERSION");
     let version_tuple = windows_version_tuple(&version);
     fs::write(
+        &app_manifest_path,
+        r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity version="1.0.0.0" processorArchitecture="*" name="AdlerIT" type="win32"/>
+  <description>AdlerIT Adler-32 checksum calculator</description>
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/PM</dpiAware>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>
+    </windowsSettings>
+  </application>
+</assembly>
+"#,
+    )
+    .expect("failed to write application manifest");
+
+    fs::write(
         &rc_path,
         format!(
-            r#"1 ICON "{icon_path}"
+            r#"#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
+#define RT_MANIFEST 24
+
+1 ICON "{icon_path}"
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "{app_manifest_rc_path}"
 
 1 VERSIONINFO
 FILEVERSION {version_tuple}
