@@ -10,8 +10,8 @@ engine, web runtime, or GPU-rendered cross-platform UI toolkit.
 ## Features
 
 - Live Adler-32 calculation from text typed into the desktop window
-- Hex and decimal output with a UTF-8 byte count
-- One-click copy of the hex checksum
+- Hex checksum output
+- One-click copy
 - Standard Windows controls with a fixed blue accent
 - Bundled JetBrains Mono for checksum/input text
 - No network access, telemetry, update checks, persisted state, or background

@@ -22,9 +22,8 @@ data files.
 ----------------
 
 - Type or paste text into the INPUT box.
-- The Adler-32 value updates live, shown as hex (0x...) and decimal, with the
-  UTF-8 byte count.
-- Click Copy to copy the hex checksum to the clipboard.
+- The Adler-32 value updates live as a hex checksum (0x...).
+- Click Copy to copy the checksum to the clipboard.
 
 
 3. Appearance
