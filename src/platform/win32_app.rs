@@ -1073,7 +1073,10 @@ fn copy_to_clipboard(hwnd: HWND, text: &str) -> bool {
             return false;
         }
 
-        EmptyClipboard();
+        if EmptyClipboard() == 0 {
+            CloseClipboard();
+            return false;
+        }
 
         let wide_text = wide(text);
         let bytes = wide_text.len() * size_of::<u16>();
