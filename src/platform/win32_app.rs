@@ -19,7 +19,9 @@ use windows_sys::Win32::System::DataExchange::{
     SetClipboardData,
 };
 use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
-use windows_sys::Win32::System::Memory::{GMEM_MOVEABLE, GlobalAlloc, GlobalLock, GlobalUnlock};
+use windows_sys::Win32::System::Memory::{
+    GMEM_MOVEABLE, GlobalAlloc, GlobalLock, GlobalSize, GlobalUnlock,
+};
 use windows_sys::Win32::System::Ole::CF_UNICODETEXT;
 use windows_sys::Win32::System::Registry::{HKEY_CURRENT_USER, RRF_RT_REG_DWORD, RegGetValueW};
 use windows_sys::Win32::UI::Controls::{
@@ -979,14 +981,21 @@ fn read_clipboard_text(hwnd: HWND) -> Option<String> {
             return None;
         }
 
+        let byte_len = GlobalSize(handle);
+        if byte_len < size_of::<u16>() {
+            CloseClipboard();
+            return None;
+        }
+
         let lock = GlobalLock(handle) as *const u16;
         if lock.is_null() {
             CloseClipboard();
             return None;
         }
 
+        let max_units = byte_len / size_of::<u16>();
         let mut len = 0usize;
-        while *lock.add(len) != 0 {
+        while len < max_units && *lock.add(len) != 0 {
             len += 1;
         }
         let slice = std::slice::from_raw_parts(lock, len);
