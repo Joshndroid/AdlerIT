@@ -81,7 +81,6 @@ struct UiHandles {
     icon_font: HFONT,
     input_font: HFONT,
     output_font: HFONT,
-    mono_font: HFONT,
     title_font: HFONT,
     theme: Theme,
     hex: String,
@@ -370,9 +369,6 @@ unsafe extern "system" fn window_proc(
                 if !ui.field_brush.is_null() {
                     DeleteObject(ui.field_brush as HGDIOBJ);
                 }
-                if !ui.mono_font.is_null() {
-                    DeleteObject(ui.mono_font as HGDIOBJ);
-                }
                 if !ui.input_font.is_null() {
                     DeleteObject(ui.input_font as HGDIOBJ);
                 }
@@ -538,7 +534,6 @@ unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) {
             icon_font,
             input_font,
             output_font,
-            mono_font: null_mut(),
             title_font,
             theme,
             hex: String::new(),
