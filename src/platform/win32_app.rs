@@ -71,6 +71,7 @@ const FONT_BYTES: &[u8] = include_bytes!("../../assets/fonts/JetBrainsMono-Regul
 
 thread_local! {
     static UI: RefCell<UiHandles> = RefCell::new(UiHandles::default());
+    static STARTUP_ERROR: RefCell<Option<String>> = const { RefCell::new(None) };
 }
 
 #[derive(Default)]
@@ -92,6 +93,17 @@ struct UiHandles {
     hex: String,
     tooltip_text_storage: Vec<Vec<u16>>,
     is_topmost: bool,
+}
+
+struct UiResources {
+    bg_brush: HBRUSH,
+    field_brush: HBRUSH,
+    font_resource: HANDLE,
+    label_font: HFONT,
+    icon_font: HFONT,
+    input_font: HFONT,
+    output_font: HFONT,
+    title_font: HFONT,
 }
 
 #[derive(Clone, Copy)]
@@ -182,6 +194,9 @@ pub fn run() -> Result<(), String> {
             null(),
         );
         if hwnd.is_null() {
+            if let Some(error) = STARTUP_ERROR.with(|error| error.borrow_mut().take()) {
+                return Err(error);
+            }
             return Err(last_error("CreateWindowExW failed"));
         }
 
@@ -238,9 +253,16 @@ unsafe extern "system" fn window_proc(
             } else {
                 unsafe { (*create).hInstance }
             };
-            unsafe {
-                create_controls(hwnd, hinstance);
-                update_checksum();
+            match unsafe { create_controls(hwnd, hinstance) } {
+                Ok(()) => unsafe {
+                    update_checksum();
+                },
+                Err(error) => {
+                    STARTUP_ERROR.with(|startup_error| {
+                        *startup_error.borrow_mut() = Some(error);
+                    });
+                    return -1;
+                }
             }
             0
         }
@@ -416,7 +438,7 @@ unsafe extern "system" fn window_proc(
     }
 }
 
-unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) {
+unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) -> Result<(), String> {
     let label_font = create_system_font(-15, FW_NORMAL);
     let icon_font = create_icon_font();
     let title_font = create_system_font(-24, FW_BOLD);
@@ -426,10 +448,29 @@ unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) {
     let theme = Theme::from_system();
     let bg_brush = unsafe { CreateSolidBrush(theme.background) };
     let field_brush = unsafe { CreateSolidBrush(theme.field) };
+    let resources = UiResources {
+        bg_brush,
+        field_brush,
+        font_resource,
+        label_font,
+        icon_font,
+        input_font,
+        output_font,
+        title_font,
+    };
+
+    if let Err(error) = validate_gdi_resources(&resources) {
+        unsafe {
+            cleanup_resources(&resources);
+        }
+        return Err(error);
+    }
 
     let title = create_static(hwnd, hinstance, "AdlerIT", 24, 16, 120, 30);
-    unsafe {
-        SendMessageW(title, WM_SETFONT, title_font as WPARAM, 1);
+    if !title.is_null() {
+        unsafe {
+            SendMessageW(title, WM_SETFONT, title_font as WPARAM, 1);
+        }
     }
     let subtitle = create_static(hwnd, hinstance, "Adler-32 calculator", 24, 46, 160, 22);
 
@@ -512,6 +553,26 @@ unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) {
             null(),
         )
     };
+    let controls = [
+        (title, "title label"),
+        (subtitle, "subtitle label"),
+        (minimize, "minimize button"),
+        (topmost, "topmost button"),
+        (close, "close button"),
+        (input_label, "input label"),
+        (input, "input field"),
+        (paste, "paste button"),
+        (output_label, "output label"),
+        (output, "output field"),
+        (copy, "copy button"),
+    ];
+    if let Err(error) = validate_controls(&controls) {
+        unsafe {
+            cleanup_resources(&resources);
+        }
+        return Err(error);
+    }
+
     let (tooltip, tooltip_text_storage) = unsafe {
         create_tooltips(
             hwnd,
@@ -577,6 +638,81 @@ unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) {
 
     unsafe {
         SetFocus(input);
+    }
+
+    Ok(())
+}
+
+fn validate_gdi_resources(resources: &UiResources) -> Result<(), String> {
+    let required = [
+        (resources.bg_brush as *mut c_void, "background brush"),
+        (resources.field_brush as *mut c_void, "field brush"),
+        (resources.label_font as *mut c_void, "label font"),
+        (resources.icon_font as *mut c_void, "icon font"),
+        (resources.input_font as *mut c_void, "input font"),
+        (resources.output_font as *mut c_void, "output font"),
+        (resources.title_font as *mut c_void, "title font"),
+    ];
+
+    for (handle, name) in required {
+        if handle.is_null() {
+            return Err(format!("Could not create {name}."));
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_controls(controls: &[(HWND, &str)]) -> Result<(), String> {
+    for &(control, name) in controls {
+        if control.is_null() {
+            return Err(format!("Could not create {name}."));
+        }
+    }
+
+    Ok(())
+}
+
+unsafe fn cleanup_resources(resources: &UiResources) {
+    if !resources.bg_brush.is_null() {
+        unsafe {
+            DeleteObject(resources.bg_brush as HGDIOBJ);
+        }
+    }
+    if !resources.field_brush.is_null() {
+        unsafe {
+            DeleteObject(resources.field_brush as HGDIOBJ);
+        }
+    }
+    if !resources.input_font.is_null() {
+        unsafe {
+            DeleteObject(resources.input_font as HGDIOBJ);
+        }
+    }
+    if !resources.output_font.is_null() {
+        unsafe {
+            DeleteObject(resources.output_font as HGDIOBJ);
+        }
+    }
+    if !resources.label_font.is_null() {
+        unsafe {
+            DeleteObject(resources.label_font as HGDIOBJ);
+        }
+    }
+    if !resources.icon_font.is_null() {
+        unsafe {
+            DeleteObject(resources.icon_font as HGDIOBJ);
+        }
+    }
+    if !resources.title_font.is_null() {
+        unsafe {
+            DeleteObject(resources.title_font as HGDIOBJ);
+        }
+    }
+    if !resources.font_resource.is_null() {
+        unsafe {
+            RemoveFontMemResourceEx(resources.font_resource);
+        }
     }
 }
 
@@ -799,8 +935,10 @@ fn create_static(
         )
     };
     let font = unsafe { GetStockObject(DEFAULT_GUI_FONT) };
-    unsafe {
-        SendMessageW(control, WM_SETFONT, font as WPARAM, 1);
+    if !control.is_null() {
+        unsafe {
+            SendMessageW(control, WM_SETFONT, font as WPARAM, 1);
+        }
     }
     control
 }
