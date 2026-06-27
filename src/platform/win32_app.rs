@@ -23,19 +23,22 @@ use windows_sys::Win32::System::Memory::{GMEM_MOVEABLE, GlobalAlloc, GlobalLock,
 use windows_sys::Win32::System::Ole::CF_UNICODETEXT;
 use windows_sys::Win32::System::Registry::{HKEY_CURRENT_USER, RRF_RT_REG_DWORD, RegGetValueW};
 use windows_sys::Win32::UI::Controls::{
-    DRAWITEMSTRUCT, EM_SETMARGINS, ODS_FOCUS, ODS_SELECTED, ODT_BUTTON,
+    DRAWITEMSTRUCT, EM_SETMARGINS, ICC_WIN95_CLASSES, INITCOMMONCONTROLSEX, InitCommonControlsEx,
+    ODS_FOCUS, ODS_SELECTED, ODT_BUTTON, TOOLTIPS_CLASSW, TTF_IDISHWND, TTF_SUBCLASS, TTM_ADDTOOLW,
+    TTM_SETMAXTIPWIDTH, TTS_ALWAYSTIP, TTS_NOPREFIX, TTTOOLINFOW,
 };
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::{ReleaseCapture, SetFocus};
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    BS_OWNERDRAW, CREATESTRUCTW, CW_USEDEFAULT, CreateWindowExW, DefWindowProcW, DispatchMessageW,
-    EC_LEFTMARGIN, EC_RIGHTMARGIN, EN_CHANGE, ES_NOHIDESEL, ES_READONLY, GetMessageW,
-    GetWindowTextLengthW, GetWindowTextW, HICON, HMENU, HTCAPTION, HWND_NOTOPMOST, HWND_TOPMOST,
-    ICON_BIG, ICON_SMALL, IDC_ARROW, IDI_APPLICATION, LoadCursorW, LoadIconW, MB_ICONERROR, MB_OK,
-    MSG, MessageBoxW, PostMessageW, PostQuitMessage, RegisterClassW, SW_MINIMIZE, SW_SHOW,
-    SWP_NOMOVE, SWP_NOSIZE, SendMessageW, SetWindowPos, SetWindowTextW, ShowWindow,
-    TranslateMessage, WM_CLOSE, WM_COMMAND, WM_CREATE, WM_CTLCOLOREDIT, WM_CTLCOLORSTATIC,
-    WM_DESTROY, WM_DRAWITEM, WM_LBUTTONDOWN, WM_NCLBUTTONDOWN, WM_PAINT, WM_SETFONT, WM_SETICON,
-    WNDCLASSW, WS_CHILD, WS_EX_CLIENTEDGE, WS_POPUP, WS_TABSTOP, WS_VISIBLE,
+    BS_OWNERDRAW, CREATESTRUCTW, CW_USEDEFAULT, CreateWindowExW, DefWindowProcW, DestroyWindow,
+    DispatchMessageW, EC_LEFTMARGIN, EC_RIGHTMARGIN, EN_CHANGE, ES_NOHIDESEL, ES_READONLY,
+    GetMessageW, GetWindowTextLengthW, GetWindowTextW, HICON, HMENU, HTCAPTION, HWND_NOTOPMOST,
+    HWND_TOPMOST, ICON_BIG, ICON_SMALL, IDC_ARROW, IDI_APPLICATION, LoadCursorW, LoadIconW,
+    MB_ICONERROR, MB_OK, MSG, MessageBoxW, PostMessageW, PostQuitMessage, RegisterClassW,
+    SW_MINIMIZE, SW_SHOW, SWP_NOMOVE, SWP_NOSIZE, SendMessageW, SetWindowPos, SetWindowTextW,
+    ShowWindow, TranslateMessage, WM_CLOSE, WM_COMMAND, WM_CREATE, WM_CTLCOLOREDIT,
+    WM_CTLCOLORSTATIC, WM_DESTROY, WM_DRAWITEM, WM_LBUTTONDOWN, WM_NCLBUTTONDOWN, WM_PAINT,
+    WM_SETFONT, WM_SETICON, WNDCLASSW, WS_CHILD, WS_EX_CLIENTEDGE, WS_EX_TOPMOST, WS_POPUP,
+    WS_TABSTOP, WS_VISIBLE,
 };
 
 use crate::hash;
@@ -74,6 +77,7 @@ struct UiHandles {
     output: HWND,
     topmost: HWND,
     copy: HWND,
+    tooltip: HWND,
     bg_brush: HBRUSH,
     field_brush: HBRUSH,
     font_resource: HANDLE,
@@ -84,6 +88,7 @@ struct UiHandles {
     title_font: HFONT,
     theme: Theme,
     hex: String,
+    tooltip_text_storage: Vec<Vec<u16>>,
     is_topmost: bool,
 }
 
@@ -137,6 +142,12 @@ pub fn run() -> Result<(), String> {
         if hinstance.is_null() {
             return Err(last_error("GetModuleHandleW failed"));
         }
+
+        let common_controls = INITCOMMONCONTROLSEX {
+            dwSize: size_of::<INITCOMMONCONTROLSEX>() as u32,
+            dwICC: ICC_WIN95_CLASSES,
+        };
+        InitCommonControlsEx(&common_controls);
 
         let class_name = wide("AdlerITWindow");
         let icon = load_app_icon(hinstance);
@@ -372,6 +383,9 @@ unsafe extern "system" fn window_proc(
                 if !ui.field_brush.is_null() {
                     DeleteObject(ui.field_brush as HGDIOBJ);
                 }
+                if !ui.tooltip.is_null() {
+                    DestroyWindow(ui.tooltip);
+                }
                 if !ui.input_font.is_null() {
                     DeleteObject(ui.input_font as HGDIOBJ);
                 }
@@ -496,6 +510,19 @@ unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) {
             null(),
         )
     };
+    let (tooltip, tooltip_text_storage) = unsafe {
+        create_tooltips(
+            hwnd,
+            hinstance,
+            &[
+                (minimize, "Minimize"),
+                (topmost, "Keep on top"),
+                (close, "Close"),
+                (paste, "Paste"),
+                (copy, "Copy checksum"),
+            ],
+        )
+    };
 
     for control in [subtitle, input_label, output_label] {
         unsafe {
@@ -530,6 +557,7 @@ unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) {
             output,
             topmost,
             copy,
+            tooltip,
             bg_brush,
             field_brush,
             font_resource,
@@ -540,6 +568,7 @@ unsafe fn create_controls(hwnd: HWND, hinstance: HINSTANCE) {
             title_font,
             theme,
             hex: String::new(),
+            tooltip_text_storage,
             is_topmost: false,
         };
     });
@@ -798,6 +827,67 @@ fn create_icon_button(
             null(),
         )
     }
+}
+
+unsafe fn create_tooltips(
+    hwnd: HWND,
+    hinstance: HINSTANCE,
+    tools: &[(HWND, &str)],
+) -> (HWND, Vec<Vec<u16>>) {
+    let tooltip = unsafe {
+        CreateWindowExW(
+            WS_EX_TOPMOST,
+            TOOLTIPS_CLASSW,
+            null(),
+            WS_POPUP | TTS_ALWAYSTIP | TTS_NOPREFIX,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            hwnd,
+            null_mut(),
+            hinstance,
+            null(),
+        )
+    };
+    if tooltip.is_null() {
+        return (null_mut(), Vec::new());
+    }
+
+    unsafe {
+        SendMessageW(tooltip, TTM_SETMAXTIPWIDTH, 0, 240);
+    }
+
+    let mut tooltip_text = tools
+        .iter()
+        .map(|(_, label)| wide(label))
+        .collect::<Vec<_>>();
+
+    for ((control, _), text) in tools.iter().zip(tooltip_text.iter_mut()) {
+        if control.is_null() {
+            continue;
+        }
+
+        let mut tool = TTTOOLINFOW {
+            cbSize: size_of::<TTTOOLINFOW>() as u32,
+            uFlags: TTF_IDISHWND | TTF_SUBCLASS,
+            hwnd,
+            uId: *control as usize,
+            hinst: hinstance,
+            lpszText: text.as_mut_ptr(),
+            ..Default::default()
+        };
+        unsafe {
+            SendMessageW(
+                tooltip,
+                TTM_ADDTOOLW,
+                0,
+                &mut tool as *mut TTTOOLINFOW as LPARAM,
+            );
+        }
+    }
+
+    (tooltip, tooltip_text)
 }
 
 unsafe fn update_checksum() {
