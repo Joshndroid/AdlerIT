@@ -87,7 +87,7 @@ jobs:
         run: Scripts\build-windows-gui.ps1
 
       - name: Upload Windows GUI app
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: AdlerIT-Windows-x64
           path: |
@@ -173,7 +173,7 @@ jobs:
           Get-Content $reportPath
 
       - name: Upload Microsoft Defender scan report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: AdlerIT-Windows-Defender-scan-report
           path: defender-scan-report.txt
@@ -267,7 +267,7 @@ jobs:
           sha256sum "${expected_assets[@]/#/release-assets/}" > release-assets.sha256
 
       - name: Upload dry-run summary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: AdlerIT-release-dry-run-summary
           path: |
